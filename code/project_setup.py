@@ -6,6 +6,8 @@ import os
 import argparse
 import pkg_resources
 import requests
+import zipfile
+# import shutil
 
 
 
@@ -32,6 +34,13 @@ def project_setup(directory):
     else:
         print(f'{calib_dir} already exists')
 
+    # create a directory for the mouse videos
+    vid_dir = os.path.join(directory,'videos')
+    if not os.path.exists(vid_dir):
+        os.mkdir(vid_dir)
+    else:
+        print(f'{vid_dir} already exists')
+    
 
     # create the sqlite3 file with all appropriate files
     sqlite_setup(directory=directory)
@@ -46,12 +55,22 @@ def project_setup(directory):
     # create either a SLEAP or MARS directory depending on what we created
     if 'sleap' in [p.project_name for p in pkg_resources.working_set]:
         keypoints_dir = os.path.join(directory, 'SLEAP')
+
+        # One directory for the sideviews, one for the bottom-up
+        for view_dir in ['sideview','underside']:
+            subdirs = [os.path.join(keypoints_dir,view_dir, subdir) for subdir in ['models','predictions']]
+            for subdir in subdirs:
+                # create a subdir for models and predictions for each view
+                os.makedirs(subdir, mode=0o755, exist_ok=True)
+
+
+
     elif 'mars' in [p.project_name for p in pkg_resources.working_set]:
-        os.mkdir()
+        print('Kevin, get MARS setup running')
+        # os.mkdir()
     
 
-
-
+    
 
 
 
@@ -107,6 +126,28 @@ def sqlite_setup(directory:str):
                         );'''
     cur.execute(calibration_creation)
    
+
+# function to download and save a zip file
+def download_zip(url:str, save_path:str, chunk_size=128):
+    zip_fn = os.path.join(save_path,url.split('/')[-1]+'temp.zip')
+
+    # open a stream using http get
+    r = requests.get(url, stream=True)
+    # open the file and save in 128 byte chunks
+    print(f'Downloading {url}')
+    with open(zip_fn, 'wb') as fid:
+        for chunk in r.iter_content(chunk_size=chunk_size):
+            fid.write(chunk)
+    
+    print(f'Extracing files from {url}')
+    zipfile.ZipFile(zip_fn).extractall(save_path)
+    
+    print(f'Deleting original zip {zip_fn}')
+    os.remove(zip_fn)
+
+
+
+
 
 if __name__ == '__main__':
     # command line calls

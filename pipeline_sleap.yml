@@ -13,8 +13,8 @@ dependencies:
   - wxPython
   - pip:
     - mayavi==4.8.1
-    - opencv-python==4.9
-    - opencv-contrib-python==4.9
+    - opencv-python==4.9.0.80
+    - opencv-contrib-python==4.9.0.80
     - aniposelib==0.6.1
     - vtk==9.3.0
     - tables==3.7.0
