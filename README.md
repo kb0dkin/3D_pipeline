@@ -26,3 +26,35 @@ To install the MARS-based toolchain:
 conda env create -n pipeline_3D -f pipeline_MARS
 ```
 
+Then activate the environment
+```
+conda activate pipeline_3D
+```
+
+
+## Project Setup
+The pipeline I built around SLEAP/MARS and AniPose uses sqlite to keep track of the calibration videos and recording sessions. 
+
+First, run the [project setup](code/project_setup.py) python script
+```
+python code/project_setup.py [project_directory]
+```
+
+This will 
+1. create a new directory if it doesn't exist
+1. setup a sqlite file with all of the necessary tables
+1. create a SLEAP or MARS subdirectory and place all settings files and pretrained models inside
+1. create an Anipose __.toml__ file with the settings we have found to work the best
+
+## Predict keypoints with Sleap
+You can use our pre-built models to pre
+
+
+## Predict keypoints with MARS
+
+
+## Calibration Videos
+
+
+## Triangulate Keypoints 
+

@@ -1,0 +1,21 @@
+name: pipeline_sleap
+channels:
+  - defaults
+  - conda-forge
+  - sleap
+  - nvidia
+dependencies:
+  - python=3.7
+  - tensorflow
+  - pip
+  - ipympl
+  - wxPython
+  - pip:
+    - mayavi==4.8.1
+    - opencv-python==4.9
+    - opencv-contrib-python==4.9
+    - aniposelib==0.6.1
+    - vtk==9.3.0
+    - tables==3.7.0
+    - apptools
+    - git+https://github.com/neuroethology/MARS_developer.git@developer_3D
