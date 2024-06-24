@@ -48,9 +48,13 @@ def project_setup(directory):
 
     # create the mouse list csv
     csv_fname = os.path.join(directory, 'mouse_list.csv')
-    with open(csv_fname, 'a+') as fid:
-        headers = 'id,injection_date,injection_type,sex\n'
-        fid.write(headers)
+    if not os.path.exists(csv_fname):
+        print(f'Creating {csv_fname}')
+        with open(csv_fname, 'w+') as fid:
+            headers = 'id,injection_date,injection_type,sex\n'
+            fid.write(headers)
+    else:
+        print(f'{csv_fname} already exists')
 
     
     # create either a SLEAP or MARS directory depending on what we created
