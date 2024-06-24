@@ -1,0 +1,74 @@
+
+project = "3d"
+
+model_folder = "/home/kevin/anipose_projects/3d"
+
+nesting = 1
+video_extension = "mp4"
+
+[calibration]
+# checkerboard / charuco / aruco
+board_type = "charuco"
+
+# width and height of grid
+board_size = [6, 6]
+
+# number of bits in the markers, if aruco/charuco
+board_marker_bits = 6
+
+# number of markers in dictionary, if aruco/charuco
+board_marker_dict_number = 250
+
+# length of marker side
+board_marker_length = 8 # mm
+
+# If aruco, length of marker separation
+# board_marker_separation_length = 1 # mm
+
+# If charuco or checkerboard, square side length
+board_square_side_length = 10 # mm
+
+animal_calibration = false
+
+fisheye = true
+
+[filter]
+enabled = true
+score_threshold = 0.3
+medfilt = 13
+offset_threshold = 25
+spline = true
+
+
+[labeling]
+scheme = [
+    ["Nose", "Right Ear"],
+    ["Nose", "Left Ear"],
+    ["Nose", "Throat", "Spine Center", "Tail Base"],
+    ["Spine Center", "Left Front Paw"],
+    ["Spine Center", "Right Front Paw"],
+    ["Spine Center", "Left Knee", "Left Rear Paw"],
+    ["Spine Center", "Right Knee", "Right Rear Paw"]
+ ]
+
+[triangulation]
+triangulate = true
+cam_regex = "_(Center|North|South|East|West)"
+# cam_regex = "_([A-Z])"
+cam_align = "C"
+ransac = false
+optim = true
+constraints = [
+   ["Nose", "Right Ear"], ["Nose", "Left Ear"], ["Nose", "Throat"],
+   ["Throat","Spine Center"], ["Spine Center", "Tail Base"],
+   ["Spine Center", "Left Front Paw"], ["Spine Center", "Right Front Paw"],
+   ["Spine Center", "Left Knee"], ["Left Knee", "Left Rear Paw"],
+   ["Spine Center", "Right Knee"],  ["Right Knee", "Right Rear Paw"]
+]
+scale_smooth = 25
+scale_length = 10
+scale_length_weak = 2
+reproj_error_threshold = 3
+score_threshold = 0.4
+n_deriv_smooth = 2
+
