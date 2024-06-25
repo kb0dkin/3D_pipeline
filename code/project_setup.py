@@ -13,7 +13,7 @@ import gdown
 
 
 # main command
-def project_setup(directory):
+def project_setup(project_dir:str):
     '''Sets up a project directory for our 3D tracking pipeline.
                     \t * creates a new project directory if it doesn't exist
                     \t * creates a calibration video directory if it doesn't exist
@@ -22,21 +22,21 @@ def project_setup(directory):
                     \t * creates and AniPose .toml settings file'''
 
     # create the base directory if needed
-    if not os.path.exists(directory):
-        os.mkdir(directory)
-        print(f'Created directory {directory}')
+    if not os.path.exists(project_dir):
+        os.mkdir(project_dir)
+        print(f'Created directory {project_dir}')
     else:
-        print(f'{directory} already exists. Continuing')
+        print(f'{project_dir} already exists. Continuing')
 
     # create a directory for the calibration videos
-    calib_dir = os.path.join(directory,'calibration_videos') 
+    calib_dir = os.path.join(project_dir,'calibration_videos') 
     if not os.path.exists(calib_dir):
         os.mkdir(calib_dir)
     else:
         print(f'{calib_dir} already exists')
 
     # create a directory for the mouse videos
-    vid_dir = os.path.join(directory,'videos')
+    vid_dir = os.path.join(project_dir,'videos')
     if not os.path.exists(vid_dir):
         os.mkdir(vid_dir)
     else:
@@ -44,14 +44,14 @@ def project_setup(directory):
     
 
     # create the sqlite3 file with all appropriate files
-    sqlite_setup(directory=directory)
+    sqlite_setup(project_dir=project_dir)
 
     # create the mouse list csv
-    csv_fname = os.path.join(directory, 'mouse_list.csv')
+    csv_fname = os.path.join(project_dir, 'mouse_list.csv')
     if not os.path.exists(csv_fname):
         print(f'Creating {csv_fname}')
         with open(csv_fname, 'w+') as fid:
-            headers = 'id,injection_date,injection_type,sex\n'
+            headers = 'id,mouse_type,sex,injection_date\n'
             fid.write(headers)
     else:
         print(f'{csv_fname} already exists')
@@ -59,7 +59,7 @@ def project_setup(directory):
     
     # create either a SLEAP or MARS directory depending on what we created
     if 'sleap' in [p.project_name for p in pkg_resources.working_set]:
-        keypoints_dir = os.path.join(directory, 'SLEAP')
+        keypoints_dir = os.path.join(project_dir, 'SLEAP')
 
         # One directory for the sideviews, one for the bottom-up
         for view_dir in ['sideview','underside']:
@@ -86,23 +86,27 @@ def project_setup(directory):
     
 
     # copy config.toml to the base directory
-    print(f'Copying default config.toml into {directory}')
+    print(f'Copying default config.toml into {project_dir}')
     src_toml = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.toml')
-    dest_toml = os.path.join(directory,'config.toml')
+    dest_toml = os.path.join(project_dir,'config.toml')
     shutil.copy(src_toml , dest_toml)
 
 
+    # done!
+    print(f'Project Setup Complete\a')
 
-def sqlite_setup(directory:str):
+
+
+def sqlite_setup(project_dir:str):
     # create the sqlite3 file for our 3D pipeline
 
     # boot us if the directory doesn't exist 
-    if not os.path.exists(directory):
+    if not os.path.exists(project_dir):
         print('Base Directory {directory} does not exist!')
         exit()
 
     # create the file and the cursor
-    sqlite_file = os.path.join(directory, 'project_tracking.sqlite3')
+    sqlite_file = os.path.join(project_dir, 'project_tracking.sqlite3')
     if os.path.exists(sqlite_file):
         print(f'{sqlite_file} already exists')
     con = sqlite3.connect(sqlite_file)
@@ -112,7 +116,7 @@ def sqlite_setup(directory:str):
     # create the mouse table
     mouse_creation = '''
                         CREATE TABLE IF NOT EXISTS mouse 
-                        (id text, injection_date text, injection_type text, sex text);
+                        (id text PRIMARY KEY, mouse_type text, sex text, injection_date text );
                         '''
     cur.execute(mouse_creation)
 
@@ -165,7 +169,7 @@ def download_zip(url:str, save_path:str, chunk_size=128):
     os.remove(zip_fn)
 
 
-def download_gdrive(model_url:str, save_path:str, chunk_size = 32768):
+def download_gdrive(model_url:str, save_path:str):
     print(f'Downloading {model_url}')
     zip_fn = os.path.join(save_path, 'temp.zip')
     gdown.download(model_url, zip_fn, fuzzy=True)
@@ -188,4 +192,4 @@ if __name__ == '__main__':
     parser.add_argument('d', help = 'Project Directory')
     args = parser.parse_args()
 
-    project_setup(directory= args.d)
+    project_setup(project_dir = args.d)
