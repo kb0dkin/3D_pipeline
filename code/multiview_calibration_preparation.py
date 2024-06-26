@@ -112,19 +112,24 @@ def multiview_calibration_preparation(input_vids:List[str] = None, sql_path:str 
 
     '''
 
-    print(input_vids)
-    
     # select the videos
     if (input_vids is None) or not any([path.exists(vid) for vid in input_vids]) :
         input_vids = select_vids(path.split(sql_path)[0])
     
-
+    insert_len = 0
     for vid in input_vids:
+        # check if video is already in SQL 
+        if vid_in_table(vid, sql_path):
+            continue
+
         # pull out boundaries for each video 
         vid_bounds = bound_creator(vid = vid, view_names=view_names)
         
         # write to sql
         sql_write(sql_path, vid_bounds, vid)
+        insert_len += 1
+
+    print(f'{len(input_vids) - insert_len} videos already in calibration table; inserted {insert_len} new entries')
 
 
 def select_vids(project_dir):
@@ -236,7 +241,7 @@ def sql_write(sqlite_path:str, view_bounds:boundary, vid_name:str):
     vid_relative = os.path.split(vid_name)[-1]
 
     # format the sql insertion
-    sql_query = '''INSERT INTO calibration (relative_path, boundary) VALUES (?, ?) ;'''
+    sql_query = '''INSERT INTO calibration (name, boundary) VALUES (?, ?) ;'''
 
     # sql_cur.execute(sql_query, (vid_relative, view_bounds.pkl_it()))
     sql_cur.execute(sql_query, (vid_relative, view_bounds.jsonify()))
@@ -392,7 +397,28 @@ def crop_and_splice(video_paths, project_dir, num_frames):
     bound_fid.close()
 
         
+# check to see if a video is already in the SQL database
+def vid_in_table(vid_fn:str, sql_path:str):
+    '''
+    Checks to see if a video is already in the SQL database
+    '''
 
+    vid_short = os.path.split(vid_fn)[-1]
+
+    con = sqlite3.connect(sql_path)
+    cur = con.cursor()
+
+    sql_query = '''SELECT name FROM calibration WHERE name = ? '''
+    # sql_query = '''SELECT name FROM calibration WHERE name = "''' + vid_short + '";'
+    params = (vid_short, )
+    # print(sql_query)
+    # cur.execute(sql_query, ('"'+vid_short+'"'))
+    # cur.execute(sql_query)
+    cur.execute(sql_query, params)
+    ret = cur.fetchall()
+
+    return bool(len(ret) > 0)
+    
 
 
 

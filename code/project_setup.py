@@ -132,7 +132,7 @@ def sqlite_setup(project_dir:str):
     # create the videos table
     videos_creation = ''' 
                         CREATE TABLE IF NOT EXISTS videos (
-                            relative_path text, 
+                            vid_name text, 
                             session_id text,
                             description text,
                             FOREIGN KEY (session_id) REFERENCES "session" ([rowid])
@@ -142,7 +142,8 @@ def sqlite_setup(project_dir:str):
     # calibration table
     calibration_creation = ''' 
                         CREATE TABLE IF NOT EXISTS calibration (
-                            relative_path text,
+                            name text,
+                            time text,
                             boundary blob,
                             intrinsic blob,
                             extrinsic blob

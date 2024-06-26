@@ -55,26 +55,37 @@ Next, we have to put data (mice information and videos) into the project.
 You have to do a few preparatory pieces:
 1. Open the "mouse_list.csv" using a spreadsheet software like Excel or OpenOffice. Populate the spreadsheet with the mice you have.
 1. Place all videos that you want to analyze in the "videos" directory. Videos need to be separated into subdirectories by mouse, and the mouse id needs to be in the directory tree.
-  * eg. ```videos/mouse_id/20231105/chocolate_chips.mp4``` 
+    * eg. ```videos/mouse_id/20231105/chocolate_chips.mp4``` 
 1. Place all calibration videos into the "calibration_videos" directory. The video filenames **must** contain the date in the ```_YYYYmmdd_``` including the leading and trailing underscores
-  * eg. ```Basler_0101_20231105_.mp4```
+    * eg. ```Basler_0101_20231105_.mp4```
 
+
+---
 Next, run the run the [project populate](code/project_populate.py) python script
 ```
-python code/project_populate.py
+python code/project_populate.py [directory]
 ```
+
+This script:
+1. Updates the sqlite database with any new mice that have been added to the __mouse_list.csv__ file
+1. Adds any new calibration videos to the sqlite database, and has the user mark the bounding box for each view
+1. Adds any new videos to the sqlite database, then
+    1. Associate it with the calibration video that was recorded most recently for that day
+    1. Crops the video into different views based on that calibration video
 
 
 
 ## Predict keypoints with Sleap
-You can use our pre-built models to pre
+We'll be using our pre-built Sleap models to predict our keypoints. 
 
+```
+python code/predict_all.py [directory]
+```
 
-## Predict keypoints with MARS
-
-
-## Calibration Videos
-
-
-## Triangulate Keypoints 
+For each session in the sqlite DB:
+1. Predicts the "North/South/East/West" videos in SLEAP using the sideview models, and the "center" video using the underside video
+    - ``` sleap-track -m [centroid.slp] -m [centered-instance.slp] --tracking hungarian --max-tracks 1 --```
+1. Converts the predictions into something that AniPose can understand.
+    - ```Sleap2Anipose.py```
+1. Triangulates the data using the configuration from that day.
 

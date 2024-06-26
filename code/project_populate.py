@@ -78,10 +78,12 @@ def populate_mice(sql_file:str, csv_file:str):
 
     # pull in the csv
     mouse_df = pd.read_csv(csv_file)
+    full_len = len(mouse_df) # how many mice are in the CSV?
 
     # remove any mice  that are already in the database
     exist_df = pd.read_sql('SELECT id FROM MOUSE;', con=con)
     mouse_df = mouse_df.loc[~mouse_df['id'].isin(exist_df['id'])]
+    insert_len = len(mouse_df) # how many aren't already in the sql?
 
     # populate the sql file
     mouse_df.to_sql('mouse', con=con, if_exists='append', index=False,
@@ -90,21 +92,54 @@ def populate_mice(sql_file:str, csv_file:str):
                            'sex': 'text',
                            'injection_date': 'text'})
 
-    # let folks know how many we inserted
-    # print(f'Inserted {num_inserted} new mice')
-
-    print(f'Inserted {len(mouse_df)} entries into Mouse table')
+    # how many did we insert?
+    print(f'{full_len-insert_len} entries from CSV already in Mouse table;'
+          'inserted {insert_len} new entries')
+    con.close()
     return 0
 
 
 def populate_videos(videos_dir:str, sql_file:str):
     vid_counter = 0 # keep track of the number of videos added to the 
-    for root,dir,files in os.walk(videos_dir):
-        # grab any .tiff, .avi or .mp4s        
-        match_files = [file for file in files if os.path.splitext(file)[-1] in ['avi','mp4','tiff']]
+    # for root,dir,files in os.walk(videos_dir):
 
-        if not match_files:
+    # connect to the db
+    con = sqlite3.connect(sql_file)
+    cur = con.cursor()
+
+    # get a list of the mouse IDs
+    sql_query = '''SELECT id FROM mouse;'''
+    cur.execute(sql_query)
+    mouse_list = cur.fetchall()
+
+    for root,dir,files in os.walk(videos_dir):
+        vid_files = [file for file in files if os.path.splitext(file)[-1] in ['.mp4','.avi','.tiff']]
+        
+        if not vid_files:
             continue
+        
+        for vid_file in vid_files:
+            full_path = os.path.join(root, vid_file)
+
+            # find a valid mouse ID in the file path
+            mouse_id = [id[0] for id in mouse_list if id[0] in full_path]
+            if len(mouse_id) > 1:
+                print(f'Cannot parse mouse ID for {vid_file}')
+                continue
+            else:
+                mouse_id = mouse_id[0]
+
+            match = re.search('(202[3-5]\d{4})', vid_file)
+            if match:
+                vid_date = match.group(0)
+
+            
+            
+
+        print(vid_files)
+
+    con.close()
+
 
 
 
@@ -115,7 +150,6 @@ def populate_calib(calib_dir:str, sql_fn:str):
     '''
     calib_vids = glob.glob(os.path.join(calib_dir, '*.mp4')) # list of all mp4 calibration videos
     calib_vids += glob.glob(os.path.join(calib_dir, '*.avi')) # list of all avi calibration videos
-    print(calib_vids)
     multiview_calibration_preparation(input_vids = calib_vids, sql_path = sql_fn) # put them into the sql db
 
 
