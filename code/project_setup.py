@@ -51,7 +51,7 @@ def project_setup(project_dir:str):
     if not os.path.exists(csv_fname):
         print(f'Creating {csv_fname}')
         with open(csv_fname, 'w+') as fid:
-            headers = 'id,mouse_type,sex,injection_date\n'
+            headers = 'id,mouse_type,sex,experiment_start\n'
             fid.write(headers)
     else:
         print(f'{csv_fname} already exists')
@@ -116,7 +116,7 @@ def sqlite_setup(project_dir:str):
     # create the mouse table
     mouse_creation = '''
                         CREATE TABLE IF NOT EXISTS mouse 
-                        (id text PRIMARY KEY, mouse_type text, sex text, injection_date text );
+                        (id text PRIMARY KEY, mouse_type text, sex text, experiment_start text );
                         '''
     cur.execute(mouse_creation)
 

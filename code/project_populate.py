@@ -90,7 +90,7 @@ def populate_mice(sql_file:str, csv_file:str):
                     dtype={'id': 'text PRIMARY KEY',
                            'mouse_type': 'TEXT',
                            'sex': 'text',
-                           'injection_date': 'text'})
+                           'experiment_start': 'text'})
 
     # how many did we insert?
     print(f'{full_len-insert_len} entries from CSV already in Mouse table;'
@@ -123,21 +123,56 @@ def populate_videos(videos_dir:str, sql_file:str):
 
             # find a valid mouse ID in the file path
             mouse_id = [id[0] for id in mouse_list if id[0] in full_path]
-            if len(mouse_id) > 1:
+            if len(mouse_id) != 1:
                 print(f'Cannot parse mouse ID for {vid_file}')
                 continue
             else:
                 mouse_id = mouse_id[0]
 
+            # find the date
             match = re.search('(202[3-5]\d{4})', vid_file)
             if match:
-                vid_date = match.group(0)
-
+                rec_date = match.group(1)
+                rec_date = f'{rec_date[0:4]}-{rec_date[4:6]}-{rec_date[6:8]}'
             
+            # find the time (if available)
+            match = re.search('_([0-2]\d[0-5]\d[0-5]\d)_')
+            if match:
+                rec_time = match.group(1)
+                rec_date = rec_date + f'T{rec_time[0:2]}:{rec_time[2:4]}:{rec_time[4:6]}'
+            else:
+                rec_date = rec_date + 'T00:00:00'
             
+            # find the task type and enclosure
+            match = re.search('(chochip|openfield|sticker|food)')
+            if match:
+                task_id = match.group(1)
+                # enclosure depends on task type
+                enclosure = 'openfield' if task_id == 'openfield' else 'small_multiview'
+            else:
+                task_id = 'unknown'
+                enclosure = 'unknown'
 
-        print(vid_files)
+            # insert the session info into the db
+            rec_query = f'''
+                        INSERT INTO session (mouse_id, time, task, enclosure) VALUES (?, ?, ?, ?)
+            '''
+            cur.execute(rec_query, (mouse_id, rec_date, task_id, enclosure))
+            session_id = cur.lastrowid
 
+
+            #insert vid
+            vid_query = f'''
+                        INSERT INTO videos (name, session_id) VALUES (?, ?)
+                        '''
+            cur.execute(vid_query, (vid_file, session_id))
+            vid_id = cur.fetchone()
+
+            # let us know if it was inserted
+            if vid_id and session_id:
+                print(f'Inserted {vid_file}')
+            
+    con.commit()
     con.close()
 
 

@@ -417,6 +417,8 @@ def vid_in_table(vid_fn:str, sql_path:str):
     cur.execute(sql_query, params)
     ret = cur.fetchall()
 
+    con.close()
+
     return bool(len(ret) > 0)
     
 
